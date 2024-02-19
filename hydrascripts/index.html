@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>KILLBIZZ</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- import the webpage's stylesheet -->
+    <link rel="stylesheet" href="./style.css" />
+
+    <!-- import the latest version of hydra synth-->
+    <script src="https://unpkg.com/hydra-synth"></script>
+    <script src="./global-hydra.js" defer></script>
+    <script src="./hydra-script-test.js" defer></script>
+</head>
+<body>
+    <canvas id="myCanvas"></canvas>
+    <script src="https://unpkg.com/socket.io-client@4/dist/socket.io.min.js"></script>
+    <script>
+        const socket = io("http://localhost:3000");
+        socket.on('new-command', function (msg) {
+            eval(msg.data);
+        });
+    </script>
+</body>
+</html>
