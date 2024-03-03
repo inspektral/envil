@@ -14,11 +14,12 @@
     <script src="./global-hydra.js" defer></script>
     <script src="./hydra-script-test.js" defer></script>
 </head>
+
 <body>
     <canvas id="myCanvas"></canvas>
     <script src="https://unpkg.com/socket.io-client@4/dist/socket.io.min.js"></script>
     <script>
-        const socket = io("http://localhost:3000");
+        const socket = io("http://localhost:3001");
         socket.on('new-command', function (msg) {
             eval(msg.data);
         });

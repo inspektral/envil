@@ -6,31 +6,37 @@ const express = require('express');
 const app = express();
 const path = require('path');
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
+const { createServer } = require('node:http');
+const { Server } = require('socket.io');
 
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
 	console.log('envil activated!');
-	
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with  registerCommand
-	// The commandId parameter must match the command field in package.json
-	let helloWorld = vscode.commands.registerCommand('envil.helloWorld', function () {
-		// The code you place here will be executed every time your command is executed
+	let io;
 
-		// Display a message box to the user
+	let helloWorld = vscode.commands.registerCommand('envil.helloWorld', function () {
 		vscode.window.showInformationMessage('Hello World from envil!');
 		
 		app.use(express.static(path.join(__dirname, 'hydrascripts')));
 
 		app.listen(3000, () => {
 			console.log('Server is running at http://localhost:3000');
+		});
+
+		io = new Server(3001, {
+		cors: {
+			origin: '*',
+		}
+		});
+
+		io.on('connection', (socket) => {
+		console.log('terminal server : Client connected');
+		socket.on('disconnect', () => {
+			console.log('terminal server : Client disconnected');
+		});
 		});
 	});
 
@@ -44,6 +50,7 @@ function activate(context) {
 				text = document.getText();
 			}
 			console.log(text);
+			io.emit('new-command', {data:text});
 		}
 	});
 
