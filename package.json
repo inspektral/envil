@@ -15,11 +15,15 @@
     "commands": [
       {
         "command": "envil.helloWorld",
-        "title": "Hello World"
+        "title": "Envil: start hydra server"
       },
       {
         "command": "envil.evaluate",
-        "title": "evaluate"
+        "title": "Envil: evaluate selection"
+      },
+      {
+        "command": "envil.evaluateAll",
+        "title": "Envil: evaluate all"
       }
     ]
   },
@@ -39,6 +43,7 @@
   },
   "dependencies": {
     "express": "^4.18.2",
+    "open": "^10.0.4",
     "socket.io": "^4.7.4"
   }
 }
