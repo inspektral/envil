@@ -18,12 +18,8 @@
         "title": "Envil: start hydra server"
       },
       {
-        "command": "envil.evaluate",
-        "title": "Envil: evaluate selection"
-      },
-      {
-        "command": "envil.evaluateAll",
-        "title": "Envil: evaluate all"
+        "command": "envil.evaluate.hydra",
+        "title": "Envil: evaluate hydra"
       }
     ]
   },
