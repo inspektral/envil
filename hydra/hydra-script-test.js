@@ -1,3 +1,5 @@
+// @ts-nocheck
+/* eslint-disable no-undef */
 // Puertas II
 // por Celeste Betancur
 // https://github.com/essteban

@@ -1,7 +1,7 @@
 {
   "name": "envil",
   "displayName": "envil",
-  "description": "visual live coding server and client",
+  "description": "live-coding environment using Hydra and Supercollider",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.86.0"
@@ -14,15 +14,22 @@
   "contributes": {
     "commands": [
       {
-        "command": "envil.helloWorld",
-        "title": "Envil: start hydra server"
+        "command": "envil.start",
+        "title": "Envil: open environment"
+      },
+      {
+        "command": "envil.stop",
+        "title": "Envil: close environment"
       },
       {
         "command": "envil.evaluate.hydra",
-        "title": "Envil: evaluate hydra"
+        "title": "Envil: evaluate hydra code"
       }
     ]
   },
+  "extensionDependencies": [
+    "drcika.apc-extension"
+  ],
   "scripts": {
     "lint": "eslint .",
     "pretest": "npm run lint",

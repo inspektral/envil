@@ -1,0 +1,22 @@
+{
+    "apc.electron": {
+        "transparent": true,
+        "backgroundColor": "#00000000"
+    },
+    "apc.stylesheet": {
+        ".monaco-workbench .part.editor>.content .editor-group-container>.editor-container div.view-lines span": "display: inline-block; background-color: #00000056;"
+    },
+    "workbench.colorCustomizations": {
+        "editor.background": "#00000000",
+        "panel.background": "#00000000",
+        "panelSectionHeader.background": "#ff0000"
+    },
+    "window.menuBarVisibility": "compact",
+    "editor.scrollbar.verticalScrollbarSize": 0,
+    "window.zoomLevel": 1,
+    "sonarlint.rules": {
+        "javascript:S2703": {
+            "level": "off"
+        }
+    }
+}
