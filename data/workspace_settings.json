@@ -1,4 +1,5 @@
 {
+    // BEGIN: ENVIL Extension Settings
     "workbench.statusBar.visible": false,
     "workbench.editor.showTabs": "none",
     "terminal.integrated.defaultProfile.windows": "Command Prompt",
@@ -71,4 +72,5 @@
         "editor.suggest.showTypeParameters": false,
         "editor.suggest.showSnippets": false
     }
+    // END: ENVIL Extension Settings
 }

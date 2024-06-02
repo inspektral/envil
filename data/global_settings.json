@@ -1,4 +1,5 @@
 {
+    // BEGIN: ENVIL Extension Settings
     "apc.electron": {
         "transparent": true,
         "backgroundColor": "#00000000"
@@ -19,4 +20,5 @@
             "level": "off"
         }
     }
+    // END: ENVIL Extension Settings
 }
