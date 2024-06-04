@@ -19,6 +19,7 @@
         "javascript:S2703": {
             "level": "off"
         }
-    }
+    },
     // END: ENVIL Extension Settings
+    "envil.environment.active": true
 }

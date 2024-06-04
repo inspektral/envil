@@ -12,21 +12,20 @@ const jsonc = require('jsonc-parser');
 let app;
 let server;
 let io;
+const envilEnvironmentContextKey = 'envil.environment.active';
 
 /**
  * @param {vscode.ExtensionContext} context
  */
 async function activate(context) {
+
     console.log('Activating ENVIL Extension');
 
-    await vscode.commands.executeCommand('apc.extension.enable');
-
-    let openEnvironmentCommand = vscode.commands.registerCommand('envil.start', async function () {
+    const openEnvironmentCommand = vscode.commands.registerCommand('envil.start', async function () {
 		try {
-            await vscode.commands.executeCommand('apc.extension.enable');
-            let restartNeeded = false;
-            // Update workspace settings
+            updateCustomPropertyInSettings(undefined);
             const workspaceFolder = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : null;
+            // Update workspace settings
             if (workspaceFolder) {
                 const workspaceSettingsPath = path.join(workspaceFolder, '.vscode', 'settings.json');
                 await createSettingsFileIfNotExist(workspaceSettingsPath);
@@ -35,7 +34,6 @@ async function activate(context) {
                 if (fs.existsSync(workspaceSettingsPath) && 
                     areEnvironmentSettingsNotPresent(fs.readFileSync(workspaceSettingsPath, 'utf-8'))) {
                         addSettingsWithPlaceholders(workspaceSettingsPath, newWorkspaceSettings);
-                        restartNeeded = true;
                 }
             }
             // Update user settings
@@ -45,11 +43,12 @@ async function activate(context) {
             if (fs.existsSync(globalSettingsPath) && 
                 areEnvironmentSettingsNotPresent(fs.readFileSync(globalSettingsPath, 'utf-8'))) {
                     addSettingsWithPlaceholders(globalSettingsPath, newGlobalSettings);
-                    restartNeeded = true;
             }
-            if(restartNeeded){
-                promptRestart();
-            }
+
+            await delay(2000);
+
+            updateCustomPropertyInSettings(true);
+            updateContextKey();
 
             // shut down servers if needed
             if (app || server || io) {
@@ -58,9 +57,10 @@ async function activate(context) {
 
             // create servers
             app = express();
-            server = app.listen(3000, () => {
+            server = app.listen(3000, async () => {
                 console.log('Express server is running at http://localhost:3000');
-                vscode.env.openExternal(vscode.Uri.parse('http://localhost:3000'));
+                // Open the URL in the default browser
+                // vscode.env.openExternal(vscode.Uri.parse('http://localhost:3000'));
             });
             io = new Server(3001, {
                 cors: {
@@ -81,13 +81,21 @@ async function activate(context) {
             } else {
                 vscode.window.showErrorMessage("Can't serve static local files: No workspace folder is open.");
             }
-                
+
+            await delay(7000);
+
+            console.log("Enabling APC Customize UI++");
+
+            await vscode.commands.executeCommand('apc.extension.enable');
+
+            console.log("APC Customize UI++ enabled successfully!");
+
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to load environment: ${error.message}`);
         }
     });
 
-	let closeEnvironmentCommand = vscode.commands.registerCommand('envil.stop', async function () {
+	const closeEnvironmentCommand = vscode.commands.registerCommand('envil.stop', async function () {
         try {
             // remove workspace settings
             const workspaceFolder = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : null;
@@ -99,13 +107,26 @@ async function activate(context) {
             const globalSettingsPath = getGlobalSettingsPath();
             removeSettingsWithPlaceholders(globalSettingsPath);
             closeServersAndSockets();
-            promptRestart();
+
+            await delay(2000);
+
+            updateCustomPropertyInSettings(undefined);
+            updateContextKey();
+
+            await delay(7000);
+
+            console.log("Disabling APC Customize UI++");
+
+            await vscode.commands.executeCommand('apc.extension.disable');
+
+            console.log("APC Customize UI++ disabled successfully!");
+
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to close the environment: ${error.message}`);
         }
     });
 
-    let evaluateHydraCommand = vscode.commands.registerCommand('envil.evaluate.hydra', function () {
+    const evaluateHydraCommand = vscode.commands.registerCommand('envil.evaluate.hydra', function () {
         const editor = vscode.window.activeTextEditor;
         if (editor) {
             let command = "";
@@ -145,8 +166,15 @@ async function activate(context) {
 // This method is called when your extension is deactivated
 async function deactivate() {
     console.log('Deactivating ENVIL Extension');
-	await vscode.commands.executeCommand('apc.extension.disable');
+
+    const config = vscode.workspace.getConfiguration();
+    await config.update(envilEnvironmentContextKey, undefined, vscode.ConfigurationTarget.Global);
     closeServersAndSockets();
+
+    await delay(3000);
+	
+    vscode.commands.executeCommand('apc.extension.disable');
+    
     console.log('ENVIL Extension deactivated successfully!');
 }
 
@@ -176,7 +204,10 @@ async function createSettingsFileIfNotExist(settingsPath) {
             fs.writeFileSync(settingsPath, JSON.stringify({}, null, 4));
         }
     } catch (err) {
-        vscode.window.showErrorMessage(`Failed to create settings file: ${err.message}`);
+        const errorMessage = `Failed to create settings file: ${err.message}`;
+        console.error(errorMessage);
+        vscode.window.showErrorMessage(errorMessage);
+        throw errorMessage;
     }
 }
 
@@ -186,13 +217,13 @@ function getGlobalSettingsPath() {
     return path.join(homeDir, vscodeSettingsFolder, 'settings.json');
 }
 
-async function addSettingsWithPlaceholders(settingsPath, newSettings) {
+function addSettingsWithPlaceholders(settingsPath, newSettings) {
     try {
-        // Read existing settings from the file
         updateJsonWithComments(settingsPath, newSettings);
     } catch (err) {
-        console.error(err);
-        vscode.window.showErrorMessage(`Failed to update settings file: ${err.message}`);
+        const errorMessage = `Failed to add settings to ${settingsPath} file: ${err.message}`;
+        console.error(errorMessage);
+        vscode.window.showErrorMessage(errorMessage);
         throw err;
     }
 }
@@ -200,19 +231,19 @@ async function addSettingsWithPlaceholders(settingsPath, newSettings) {
 async function removeSettingsWithPlaceholders(settingsPath) {
     try {
         const settingsContent = fs.readFileSync(settingsPath, 'utf-8');
-
         // Remove custom settings between placeholders
         const updatedContent = settingsContent.replace(/\/\/ BEGIN: ENVIL Extension Settings[\s\S]*?\/\/ END: ENVIL Extension Settings/, '');
-        
         // Remove the comma after the last property inside the root of the JSON content
         const cleanedContent = updatedContent.replace(/,(?=\s*[\r\n]*\})/, '');
         // Remove the empty line after the last property
         const finalContent = cleanedContent.replace(/\n\s*\n\s*(?=\})/, '\n');
-
         // Write updated settings
         fs.writeFileSync(settingsPath, finalContent.trim());
     } catch (err) {
-        vscode.window.showErrorMessage(`Failed to remove settings file: ${err.message}`);
+        const errorMessage = `Failed to remove settings from ${settingsPath} file: ${err.message}`;
+        console.error(errorMessage);
+        vscode.window.showErrorMessage(errorMessage);
+        throw err;
     }
 }
 
@@ -270,16 +301,19 @@ function updateJsonWithComments(filePath, updates) {
     fs.writeFileSync(filePath, updatedContent, 'utf-8');
 }
 
-async function promptRestart() {
-    const restartAction = 'Restart';
-    const response = await vscode.window.showWarningMessage(
-        'Changes have been made that require a restart to take effect. Would you like to restart now?',
-        restartAction
-    );
+async function updateContextKey() {
+    const config = vscode.workspace.getConfiguration();
+    const mySetting = config.get<Boolean>(envilEnvironmentContextKey, false);
+    await vscode.commands.executeCommand('setContext', envilEnvironmentContextKey, mySetting);
+}
 
-    if (response === restartAction) {
-        vscode.commands.executeCommand('workbench.action.reloadWindow');
-    }
+async function updateCustomPropertyInSettings(value) {
+    const config = vscode.workspace.getConfiguration();
+    await config.update(envilEnvironmentContextKey, value, vscode.ConfigurationTarget.Global);
+}
+
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 module.exports = {

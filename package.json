@@ -3,6 +3,9 @@
   "displayName": "envil",
   "description": "live-coding environment using Hydra and Supercollider",
   "version": "0.0.1",
+  "repository": "https://github.com/inspektral/envil",
+  "publisher": "inspektral",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.86.0"
   },
@@ -25,6 +28,26 @@
         "command": "envil.evaluate.hydra",
         "title": "Envil: evaluate hydra code"
       }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Envil Extension Configuration",
+      "properties": {
+          "envil.environment.active": {
+              "type": "boolean",
+              "default": false,
+              "description": "A setting to check if the environment is active"
+          }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "envil.evaluate.hydra",
+        "key": "ctrl+enter",
+        "mac": "cmd+enter",
+        "when": "editorTextFocus && editorLangId == 'javascript' && envil.environment.active == true",
+        "comment": "Evaluate Hydra code in envil environment"
+      }
     ]
   },
   "extensionDependencies": [
@@ -33,7 +56,9 @@
   "scripts": {
     "lint": "eslint .",
     "pretest": "npm run lint",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "package": "vsce package",
+    "publish": "vsce publish"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
@@ -47,7 +72,6 @@
   "dependencies": {
     "express": "^4.18.2",
     "jsonc-parser": "^3.2.1",
-    "open": "^10.0.4",
     "socket.io": "^4.7.4"
   }
 }
