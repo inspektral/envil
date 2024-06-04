@@ -13,6 +13,7 @@ let app;
 let server;
 let io;
 const envilEnvironmentContextKey = 'envil.environment.active';
+let isLoadingCompleted = false;
 
 /**
  * @param {vscode.ExtensionContext} context
@@ -21,9 +22,27 @@ async function activate(context) {
 
     console.log('Activating ENVIL Extension');
 
+    const isActivated = context.globalState.get('isActivated') || false;
+
+    if (!isActivated) {
+        console.log("Enabling APC Customize UI++");
+        await vscode.commands.executeCommand('apc.extension.enable');
+        console.log("APC Customize UI++ enabled successfully!");
+
+        await delay(5000);
+        
+        context.globalState.update('isActivated', true);
+    }
+
     const openEnvironmentCommand = vscode.commands.registerCommand('envil.start', async function () {
 		try {
-            updateCustomPropertyInSettings(undefined);
+            // vscode.window.showInformationMessage("Loading ENVIL environment ...", 'Dismiss');
+            showNotification('Loading ENVIL environment ...');
+            
+            await updateCustomPropertyInSettings(undefined);
+
+            await delay(8000);
+            
             const workspaceFolder = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : null;
             // Update workspace settings
             if (workspaceFolder) {
@@ -45,10 +64,10 @@ async function activate(context) {
                     addSettingsWithPlaceholders(globalSettingsPath, newGlobalSettings);
             }
 
-            await delay(2000);
+            await delay(8000);
 
-            updateCustomPropertyInSettings(true);
-            updateContextKey();
+            await updateCustomPropertyInSettings(true);
+            await updateContextKey();
 
             // shut down servers if needed
             if (app || server || io) {
@@ -82,21 +101,17 @@ async function activate(context) {
                 vscode.window.showErrorMessage("Can't serve static local files: No workspace folder is open.");
             }
 
-            await delay(7000);
-
-            console.log("Enabling APC Customize UI++");
-
-            await vscode.commands.executeCommand('apc.extension.enable');
-
-            console.log("APC Customize UI++ enabled successfully!");
-
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to load environment: ${error.message}`);
         }
+        isLoadingCompleted = true;
     });
 
 	const closeEnvironmentCommand = vscode.commands.registerCommand('envil.stop', async function () {
         try {
+            // vscode.window.showInformationMessage("Closing ENVIL environment ...", 'Dismiss');
+            showNotification('Closing ENVIL environment ...');
+
             // remove workspace settings
             const workspaceFolder = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : null;
             if (workspaceFolder) {
@@ -108,22 +123,16 @@ async function activate(context) {
             removeSettingsWithPlaceholders(globalSettingsPath);
             closeServersAndSockets();
 
-            await delay(2000);
+            await delay(8000);
 
-            updateCustomPropertyInSettings(undefined);
-            updateContextKey();
-
-            await delay(7000);
-
-            console.log("Disabling APC Customize UI++");
-
-            await vscode.commands.executeCommand('apc.extension.disable');
-
-            console.log("APC Customize UI++ disabled successfully!");
+            await updateCustomPropertyInSettings(undefined);
+            await updateContextKey();
 
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to close the environment: ${error.message}`);
         }
+
+        isLoadingCompleted = true;
     });
 
     const evaluateHydraCommand = vscode.commands.registerCommand('envil.evaluate.hydra', function () {
@@ -167,13 +176,16 @@ async function activate(context) {
 async function deactivate() {
     console.log('Deactivating ENVIL Extension');
 
-    const config = vscode.workspace.getConfiguration();
-    await config.update(envilEnvironmentContextKey, undefined, vscode.ConfigurationTarget.Global);
+    await updateCustomPropertyInSettings(undefined);
+    await updateContextKey();
+
     closeServersAndSockets();
 
     await delay(3000);
 	
-    vscode.commands.executeCommand('apc.extension.disable');
+    console.log("Disabling APC Customize UI++");
+    await vscode.commands.executeCommand('apc.extension.disable');
+    console.log("APC Customize UI++ disabled successfully!");
     
     console.log('ENVIL Extension deactivated successfully!');
 }
@@ -304,16 +316,45 @@ function updateJsonWithComments(filePath, updates) {
 async function updateContextKey() {
     const config = vscode.workspace.getConfiguration();
     const mySetting = config.get<Boolean>(envilEnvironmentContextKey, false);
-    await vscode.commands.executeCommand('setContext', envilEnvironmentContextKey, mySetting);
+    vscode.commands.executeCommand('setContext', envilEnvironmentContextKey, mySetting);
 }
 
 async function updateCustomPropertyInSettings(value) {
     const config = vscode.workspace.getConfiguration();
-    await config.update(envilEnvironmentContextKey, value, vscode.ConfigurationTarget.Global);
+    config.update(envilEnvironmentContextKey, value, vscode.ConfigurationTarget.Global);
 }
 
-function delay(ms) {
+async function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function checkLoadingCompletion(boolCondition) {
+    return new Promise((resolve) => {
+        const checkCondition = () => {
+            if (boolCondition) {
+                resolve();
+            } else {
+                // Check again after a delay
+                setTimeout(checkCondition, 1000);
+            }
+        };
+        checkCondition();
+    });
+}
+
+function showNotification(message) {
+    isLoadingCompleted = false;
+    vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Notification,
+            title: message,
+            cancellable: false,
+        },
+        async (progress, token) => {
+            // await new Promise((resolve) => setTimeout(resolve, 1000));
+            await checkLoadingCompletion(isLoadingCompleted)
+        }
+    );
 }
 
 module.exports = {
