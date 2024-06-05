@@ -4,7 +4,7 @@
   "description": "live-coding environment using Hydra and Supercollider",
   "version": "0.0.1",
   "repository": "https://github.com/inspektral/envil",
-  "publisher": "inspektral",
+  "publisher": "killbizz",
   "license": "MIT",
   "engines": {
     "vscode": "^1.86.0"
@@ -12,7 +12,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./extension.js",
   "contributes": {
     "commands": [
