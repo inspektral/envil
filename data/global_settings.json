@@ -1,11 +1,4 @@
 {
-    "apc.electron": {
-        "transparent": true,
-        "backgroundColor": "#00000000"
-    },
-    "apc.stylesheet": {
-        ".monaco-workbench .part.editor>.content .editor-group-container>.editor-container div.view-lines span": "display: inline-block; background-color: #00000056;"
-    },
     "workbench.colorCustomizations": {
         "editor.background": "#00000000",
         "panel.background": "#00000000",
@@ -18,5 +11,12 @@
         "javascript:S2703": {
             "level": "off"
         }
+    },
+    "apc.stylesheet": {
+        ".monaco-workbench .part.editor>.content .editor-group-container>.editor-container div.view-lines span": "display: inline-block; background-color: #00000056;"
+    },
+    "apc.electron": {
+        "transparent": true,
+        "backgroundColor": "#00000000"
     }
 }
