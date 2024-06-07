@@ -7,12 +7,14 @@ const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
 const jsonc = require('jsonc-parser');
+const SC = require('./supercollider/lang');
 
-let app;
-let server;
-let io;
-const envilEnvironmentContextKey = 'envil.environment.active';
+let app = null;
+let server = null;
+let io = null;
 let isLoadingCompleted = false;
+
+const envilEnvironmentContextKey = 'envil.environment.active';
 
 /**
  * @param {vscode.ExtensionContext} context
@@ -27,14 +29,39 @@ async function activate(context) {
     if(isEnvironmentActive){
         showNotification('Loading ENVIL environment ...');
         startServersAndSockets(workspaceFolder);
+        SC.initStatusBar();
     }
+
+    const hyperScopesExt = vscode.extensions.getExtension('draivin.hscopes');
+    const hyperScopes = await hyperScopesExt.activate();
+  
+    // This refreshes the token scope, but I don't think this is optimized.. but I haven't run into issues yet.
+    vscode.window.onDidChangeActiveTextEditor(
+        () => {
+        const editor = vscode.window.activeTextEditor;
+        if (editor) {
+            const res = hyperScopes.reloadScope(editor.document);
+            console.log(res);
+        }
+        },
+        null,
+        context.subscriptions
+    );
+
+    const startSCLang = vscode.commands.registerCommand('envil.supercollider.startSCLang', SC.startSCLang);
+    const stopSCLang = vscode.commands.registerCommand('envil.supercollider.stopSCLang', SC.stopSCLang);
+    const rebootSCLang = vscode.commands.registerCommand('envil.supercollider.rebootSCLang', SC.rebootSCLang);
+    const toggleSCLang = vscode.commands.registerCommand('envil.supercollider.toggleSCLang', SC.toggleSCLang);
+    const bootSCSynth = vscode.commands.registerCommand('envil.supercollider.bootSCSynth', SC.bootSCSynth);
+    const evaluate = vscode.commands.registerCommand('envil.supercollider.evaluate', SC.evaluate);
+    const hush = vscode.commands.registerCommand('envil.supercollider.hush', SC.hush);
+    context.subscriptions.push(startSCLang, stopSCLang, rebootSCLang, toggleSCLang, bootSCSynth, evaluate, hush);
 
     const openEnvironmentCommand = vscode.commands.registerCommand('envil.start', async function () {
 		try {
             showNotification('Loading ENVIL environment ...');
             
             await updateCustomPropertyInSettings(true);
-            await updateContextKey();
 
             // Update workspace settings
             if (workspaceFolder) {
@@ -74,7 +101,6 @@ async function activate(context) {
             closeServersAndSockets();
 
             await updateCustomPropertyInSettings(false);
-            await updateContextKey();
 
             // Remove workspace settings
             if (workspaceFolder) {
@@ -95,7 +121,14 @@ async function activate(context) {
         }
     });
 
-    const evaluateHydraCommand = vscode.commands.registerCommand('envil.evaluate.hydra', function () {
+    const evaluateHydraCommand = vscode.commands.registerCommand('envil.hydra.evaluate', function () {
+
+        const isEnvironmentActive = vscode.workspace.getConfiguration().get(envilEnvironmentContextKey) || false;
+        if(!isEnvironmentActive){
+            vscode.window.showErrorMessage(`Load ENVIL environment before evaluating Hydra code`);
+            return;
+        }
+
         const editor = vscode.window.activeTextEditor;
         if (editor) {
             let command = "";
@@ -139,7 +172,6 @@ async function deactivate() {
     closeServersAndSockets();
 
     await updateCustomPropertyInSettings(undefined);
-    await updateContextKey();
 
     const currentWorkspaceFolder = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : null;
     // Remove workspace settings
@@ -153,6 +185,8 @@ async function deactivate() {
     const newGlobalSettingsPath = path.join(__dirname, 'data', 'global_settings.json');
     const newGlobalSettings = readJsonWithComments(newGlobalSettingsPath).json;
     await updateUserSettings(newGlobalSettings, true, vscode.ConfigurationTarget.Global);
+
+    await SC.stopSCLang();
 	
     console.log("Disabling APC Customize UI++");
     await vscode.commands.executeCommand('apc.extension.disable');
@@ -245,12 +279,6 @@ async function updateUserSettings(updates, deleteSettings, configurationTarget) 
     for (const [key, value] of Object.entries(updates)) {
         vscode.workspace.getConfiguration().update(key, deleteSettings ? undefined : value, configurationTarget);
     }
-}
-
-async function updateContextKey() {
-    const config = vscode.workspace.getConfiguration();
-    const mySetting = config.get<Boolean>(envilEnvironmentContextKey, false);
-    vscode.commands.executeCommand('setContext', envilEnvironmentContextKey, mySetting);
 }
 
 async function updateCustomPropertyInSettings(value) {
