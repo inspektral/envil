@@ -1,5 +1,5 @@
 {
-    "workbench.statusBar.visible": false,
+    "workbench.statusBar.visible": true,
     "workbench.editor.showTabs": "none",
     "terminal.integrated.defaultProfile.windows": "Command Prompt",
     "workbench.activityBar.location": "hidden",

@@ -39,7 +39,7 @@
   "activationEvents": [
     "onStartupFinished"
   ],
-  "main": "./dist/extension.js",
+  "main": "dist_extension.js",
   "contributes": {
     "commands": [
       {
@@ -67,16 +67,20 @@
         "title": "Envil: Stop SCLang - Supercollider"
       },
       {
-        "command": "envil.supercollider.rebootSCLang",
-        "title": "Envil: Reboot SCLang - Supercollider"
-      },
-      {
         "command": "envil.supercollider.toggleSCLang",
         "title": "Envil: Start/Stop SCLang - Supercollider"
       },
       {
-        "command": "envil.supercollider.bootSCSynth",
+        "command": "envil.supercollider.startSCSynth",
         "title": "Envil: Boot SCSynth - Supercollider"
+      },
+      {
+        "command": "envil.supercollider.stopSCSynth",
+        "title": "Envil: Stop SCSynth - Supercollider"
+      },
+      {
+        "command": "envil.supercollider.toggleSCSynth",
+        "title": "Envil: Start/Stop SCSynth - Supercollider"
       },
       {
         "command": "envil.supercollider.hush",
@@ -159,14 +163,14 @@
           ".scd",
           ".schelp"
         ],
-        "configuration": "./language-configuration.json"
+        "configuration": "./supercollider/language-configuration.json"
       }
     ],
     "grammars": [
       {
         "language": "supercollider",
         "scopeName": "source.supercollider",
-        "path": "./syntaxes/supercollider.tmLanguage.json"
+        "path": "./supercollider/syntaxes/supercollider.tmLanguage.json"
       }
     ]
   },
@@ -178,8 +182,8 @@
     "lint": "eslint .",
     "pretest": "npm run lint",
     "test": "vscode-test",
-    "package": "node esbuild.js --production",
     "vscode:prepublish": "npm run package",
+    "package": "node esbuild.js --production",
     "publish": "vsce publish"
   },
   "devDependencies": {
@@ -193,6 +197,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "esbuild-node-externals": "^1.13.1",
     "express": "^4.18.2",
     "jsonc-parser": "^3.2.1",
     "socket.io": "^4.7.4",

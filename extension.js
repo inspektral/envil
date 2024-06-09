@@ -9,6 +9,8 @@ const fs = require('fs');
 const jsonc = require('jsonc-parser');
 const SC = require('./supercollider/lang');
 
+let hyperScopes = null;
+
 let app = null;
 let server = null;
 let io = null;
@@ -30,10 +32,9 @@ async function activate(context) {
         showNotification('Loading ENVIL environment ...');
         startServersAndSockets(workspaceFolder);
         SC.initStatusBar();
+        const hyperScopesExt = vscode.extensions.getExtension('draivin.hscopes');
+        hyperScopes = await hyperScopesExt.activate();
     }
-
-    const hyperScopesExt = vscode.extensions.getExtension('draivin.hscopes');
-    const hyperScopes = await hyperScopesExt.activate();
   
     // This refreshes the token scope, but I don't think this is optimized.. but I haven't run into issues yet.
     vscode.window.onDidChangeActiveTextEditor(
@@ -50,12 +51,13 @@ async function activate(context) {
 
     const startSCLang = vscode.commands.registerCommand('envil.supercollider.startSCLang', SC.startSCLang);
     const stopSCLang = vscode.commands.registerCommand('envil.supercollider.stopSCLang', SC.stopSCLang);
-    const rebootSCLang = vscode.commands.registerCommand('envil.supercollider.rebootSCLang', SC.rebootSCLang);
     const toggleSCLang = vscode.commands.registerCommand('envil.supercollider.toggleSCLang', SC.toggleSCLang);
-    const bootSCSynth = vscode.commands.registerCommand('envil.supercollider.bootSCSynth', SC.bootSCSynth);
-    const evaluate = vscode.commands.registerCommand('envil.supercollider.evaluate', SC.evaluate);
+    const startSCSynth = vscode.commands.registerCommand('envil.supercollider.startSCSynth', SC.startSCSynth);
+    const stopSCSynth = vscode.commands.registerCommand('envil.supercollider.stopSCSynth', SC.stopSCSynth);
+    const toggleSCSynth = vscode.commands.registerCommand('envil.supercollider.toggleSCSynth', SC.toggleSCSynth);
+    const evaluate = vscode.commands.registerCommand('envil.supercollider.evaluate', () => SC.evaluate(hyperScopes));
     const hush = vscode.commands.registerCommand('envil.supercollider.hush', SC.hush);
-    context.subscriptions.push(startSCLang, stopSCLang, rebootSCLang, toggleSCLang, bootSCSynth, evaluate, hush);
+    context.subscriptions.push(startSCLang, stopSCLang, toggleSCLang, startSCSynth, stopSCSynth, toggleSCSynth, evaluate, hush);
 
     const openEnvironmentCommand = vscode.commands.registerCommand('envil.start', async function () {
 		try {

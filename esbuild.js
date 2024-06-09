@@ -1,23 +1,27 @@
 const esbuild = require('esbuild');
+const { nodeExternalsPlugin } = require('esbuild-node-externals');
 
 const production = process.argv.includes('--production');
 const watch = process.argv.includes('--watch');
 
 async function main() {
   const ctx = await esbuild.context({
-    entryPoints: ['./extension.js'],
+    entryPoints: ['extension.js'],
     bundle: true,
     format: 'cjs',
     minify: production,
     sourcemap: !production,
     sourcesContent: false,
     platform: 'node',
-    outfile: 'dist/extension.js',
+    outfile: 'dist_extension.js',
     external: ['vscode'],
     logLevel: 'silent',
     plugins: [
       /* add to the end of plugins array */
-      esbuildProblemMatcherPlugin
+      esbuildProblemMatcherPlugin,
+      nodeExternalsPlugin({
+        allowList: ['vscode'] // Keep vscode external as it is provided by the environment
+      })
     ]
   });
   if (watch) {

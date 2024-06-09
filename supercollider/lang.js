@@ -1,27 +1,39 @@
 // @ts-nocheck
 const vscode = require('vscode');
 const { flashHighlight, stringifyError, getDefaultSCLangExecutable } = require('./util');
-
 const Lang = require('supercolliderjs').lang.default;
-let lang = null;
 
 const postWindow = vscode.window.createOutputChannel('scvsc postWindow');
-const statusBar = vscode.window.createStatusBarItem('scstatus', 2);
+
+let lang = null;
+let server = null;
+
+const sclangStatusBar = vscode.window.createStatusBarItem('sclangStatus', 2);
 
 const SCLANG_STATUS_BAR = 'sclang';
 const SCLANG_STATUS_BAR_OFF = `${SCLANG_STATUS_BAR} ⭕`;
 const SCLANG_STATUS_BAR_ON = `${SCLANG_STATUS_BAR} 🟢`;
+sclangStatusBar.text = SCLANG_STATUS_BAR_OFF;
+sclangStatusBar.command = 'envil.supercollider.toggleSCLang';
+sclangStatusBar.tooltip = 'Click to boot or quit the SuperCollider interpreter';
 
-statusBar.text = SCLANG_STATUS_BAR_OFF;
-statusBar.command = 'supercollider.toggleSCLang';
-statusBar.tooltip = 'Click to boot or quit the SuperCollider interpreter.';
+const scsynthStatusBar = vscode.window.createStatusBarItem('scsynthStatus', 2);
 
-async function initStatusBar() {
-  statusBar.show();
+const SCSYNTH_STATUS_BAR = 'scsynth';
+const SCSYNTH_STATUS_BAR_OFF = `${SCSYNTH_STATUS_BAR} ⭕`;
+const SCSYNTH_STATUS_BAR_ON = `${SCSYNTH_STATUS_BAR} 🟢`;
+scsynthStatusBar.text = SCSYNTH_STATUS_BAR_OFF;
+scsynthStatusBar.command = 'envil.supercollider.toggleSCSynth';
+scsynthStatusBar.tooltip = 'Click to boot or quit the SuperCollider server';
+
+function initStatusBar() {
+  sclangStatusBar.show();
+  scsynthStatusBar.show();
 }
 
-async function closeStatusBar() {
-  statusBar.hide();
+function closeStatusBar() {
+  sclangStatusBar.hide();
+  scsynthStatusBar.hide();
 }
 
 async function startSCLang() {
@@ -30,9 +42,11 @@ async function startSCLang() {
   const confFile = configuration.get('envilsupercollider.sclang.sclang_conf');
 
   if (lang) {
-    postWindow.appendLine('there is already an instance of sclang running.');
+    postWindow.appendLine('there is already an instance of sclang running');
     return;
   }
+
+  postWindow.appendLine('Booting sclang');
 
   try {
     lang = new Lang({
@@ -53,37 +67,32 @@ async function startSCLang() {
 
     await lang.boot();
 
-    postWindow.appendLine('SCVSC: sclang is ready');
-    statusBar.text = SCLANG_STATUS_BAR_ON;
-    statusBar.show();
+    postWindow.appendLine('Successfully booted sclang');
+
+    sclangStatusBar.text = SCLANG_STATUS_BAR_ON;
+    sclangStatusBar.show();
+
+    await startSCSynth();
+
   } catch (err) {
     lang = null;
+    postWindow.appendLine('Error booting sclang');
     postWindow.appendLine(err);
     console.log(err);
   }
 }
 
 async function stopSCLang() {
+  await stopSCSynth();
   try {
-    await lang.interpret('Server.killAll');
     await lang.quit();
     lang = null;
-    statusBar.text = SCLANG_STATUS_BAR_OFF;
-    statusBar.show();
+    sclangStatusBar.text = SCLANG_STATUS_BAR_OFF;
   } catch (err) {
     postWindow.appendLine(err);
     console.log(err);
   }
-}
-
-async function rebootSCLang() {
-  try {
-    await lang.quit();
-    await lang.boot();
-  } catch (err) {
-    postWindow.appendLine(err);
-    console.log(err);
-  }
+  sclangStatusBar.show();
 }
 
 async function toggleSCLang() {
@@ -94,24 +103,57 @@ async function toggleSCLang() {
   }
 }
 
-async function bootSCSynth() {
-  if (!lang) {
-    postWindow.appendLine('sclang not started, cannot boot scsynth using s.boot.');
+async function startSCSynth() {
+  if(!lang) {
+    postWindow.appendLine('sclang not started, cannot boot scsynth');
+    return;
+  }
+  if(server) {
+    postWindow.appendLine('there is already an instance of scsynth running');
     return;
   }
   try {
-    const result = await lang.interpret('s.boot', null, true, false);
-    console.log(result);
-    postWindow.appendLine(result);
+    postWindow.appendLine('Booting scsynth');
+    server = await lang.interpret('s.boot', null, true, false);
+    console.log(server);
+    postWindow.appendLine(server);
+
+    scsynthStatusBar.text = SCSYNTH_STATUS_BAR_ON;
+    postWindow.appendLine('Successfully booted scsynth');
   } catch (err) {
+    postWindow.appendLine('Error booting scsynth');
     postWindow.appendLine(err);
     console.error(err);
+
+    scsynthStatusBar.text = SCSYNTH_STATUS_BAR_OFF;
+  } finally {
+    scsynthStatusBar.show();
   }
 }
 
-async function evaluate() {
+async function stopSCSynth() {
+  try {
+    await lang.interpret('Server.killAll');
+    server = null;
+    scsynthStatusBar.text = SCSYNTH_STATUS_BAR_OFF;
+  } catch (err) {
+    postWindow.appendLine(err);
+    console.log(err);
+  }
+  scsynthStatusBar.show();
+}
+
+async function toggleSCSynth() {
+  if (server === null) {
+    startSCSynth();
+  } else {
+    stopSCSynth();
+  }
+}
+
+async function evaluate(hyperScopes) {
   if (!lang) {
-    console.error('sclang not started, cannot boot scsynth.');
+    console.error('sclang not started, cannot evaluate supercollider code');
     return;
   }
 
@@ -119,103 +161,15 @@ async function evaluate() {
   const selection = editor.selection;
 
   if (selection && !selection.isEmpty) {
-    const selectionRange = new vscode.Range(
-      selection.start.line,
-      selection.start.character,
-      selection.end.line,
-      selection.end.character
-    );
-
-    const editor = vscode.window.activeTextEditor;
-    const highlighted = editor.document.getText(selectionRange);
-
-    try {
-      const result = await lang.interpret(highlighted, null, true, false);
-      postWindow.appendLine(result.trim());
-      flashHighlight(vscode.window.activeTextEditor, selectionRange);
-    } catch (err) {
-      postWindow.appendLine(err);
-      console.error(err);
-    }
+    evaluateSelection(selection);
   } else {
-    const ranges = [];
-    let brackets = 0;
-
-    const hyperScopesExt = vscode.extensions.getExtension('draivin.hscopes');
-    const hyperScopes = await hyperScopesExt.activate();
-    const editor = vscode.window.activeTextEditor;
-
-    // Get the total line count of the open script
-    const lineCount = vscode.window.activeTextEditor.document.lineCount;
-
-    // For every line, get the text of that line as a string.
-    for (let i = 0; i < lineCount; i++) {
-      const { text } = vscode.window.activeTextEditor.document.lineAt(i);
-
-      // for every character on the line, check to see if it's a paren
-      for (let j = 0; j < text.length; j++) {
-        const char = text.charAt(j);
-
-        // not totally sure about this --
-        // it has been hastily ported it from hadron editor so I still gotta learn how it works.
-        const { scopes } = hyperScopes.getScopeAt(editor.document, new vscode.Position(i, j));
-        const scopesLength = scopes.length - 1;
-        const lastScope = scopes[scopesLength];
-        if (
-          lastScope === 'comment.single.supercollider' ||
-          lastScope === 'comment.multiline.supercollider' ||
-          lastScope === 'string.quoted.double.supercollider' ||
-          lastScope === 'entity.name.symbol.supercollider' ||
-          lastScope === 'constant.character.escape.supercollider'
-        ) {
-          continue;
-        }
-
-        // gather the bracket ranges
-        if (char === '(' && brackets++ === 0) {
-          ranges.push([i]);
-        } else if (char === ')' && --brackets === 0) {
-          ranges[ranges.length - 1].push(i);
-        }
-      }
-    }
-    // Get where the current cursor is
-    const position = vscode.window.activeTextEditor.selection.active;
-
-    // not totally sure about this --
-    // it has been hastily ported it from hadron editor so I still gotta learn how it works.
-    const range = ranges.find((range) => {
-      return range[0] <= position.c && position.c <= range[1];
-    });
-
-    const { text } = vscode.window.activeTextEditor.document.lineAt(range[1]);
-    const lastLineLength = text.length;
-
-    const selectionRange = new vscode.Range(
-      range[0],
-      0, // will need to calculate ... because what if the paren is not the first char on the line? does that matter?
-      range[1],
-      lastLineLength
-    );
-
-    const highlighted = editor.document.getText(selectionRange);
-
-    try {
-      const result = await lang.interpret(highlighted, null, true, true, true);
-      console.log(result);
-      postWindow.appendLine(result.trim());
-      flashHighlight(vscode.window.activeTextEditor, selectionRange);
-    } catch (err) {
-      const errString = stringifyError(err);
-      postWindow.appendLine(errString);
-      console.error(errString);
-    }
+    evaluateRegion(hyperScopes);
   }
 }
 
 async function hush() {
   if (!lang) {
-    postWindow.appendLine('sclang not started, cannot hush.');
+    postWindow.appendLine('sclang not started, cannot hush');
     return;
   }
   try {
@@ -227,14 +181,109 @@ async function hush() {
   }
 }
 
+async function evaluateSelection(selection) {
+  const selectionRange = new vscode.Range(
+    selection.start.line,
+    selection.start.character,
+    selection.end.line,
+    selection.end.character
+  );
+
+  const editor = vscode.window.activeTextEditor;
+  const highlighted = editor.document.getText(selectionRange);
+
+  try {
+    const result = await lang.interpret(highlighted, null, true, false);
+    postWindow.appendLine(result.trim());
+    flashHighlight(vscode.window.activeTextEditor, selectionRange);
+  } catch (err) {
+    postWindow.appendLine(err);
+    console.error(err);
+  }
+}
+
+async function evaluateRegion(hyperScopes) {
+  const editor = vscode.window.activeTextEditor;
+  const ranges = []
+  let brackets = 0;
+
+  // Get the total line count of the open script
+  const lineCount = vscode.window.activeTextEditor.document.lineCount;
+
+  // For every line, get the text of that line as a string.
+  for (let i = 0; i < lineCount; i++) {
+      const { text } = vscode.window.activeTextEditor.document.lineAt(i);
+
+      // for every character on the line, check to see if it's a parent
+      for (let j = 0; j < text.length; j++) {
+          const char = text.charAt(j);
+
+          // not totally sure about this --
+          // it has been hastily ported it from hadron editor so I still gotta learn how it works.
+          const { scopes } = hyperScopes.getScopeAt(editor.document, new vscode.Position(i, j));
+          const scopesLength = scopes.length - 1;
+          const lastScope = scopes[scopesLength];
+          if (
+              lastScope === 'comment.single.supercollider' ||
+              lastScope === 'comment.multiline.supercollider' ||
+              lastScope === 'string.quoted.double.supercollider' ||
+              lastScope === 'entity.name.symbol.supercollider' ||
+              lastScope === 'constant.character.escape.supercollider'
+          ) {
+              continue;
+          }
+
+          // gather the bracket ranges
+          if (char === '(' && brackets++ === 0) {
+              ranges.push([i])
+          } else if (char === ')' && --brackets === 0) {
+              ranges[ranges.length - 1].push(i)
+          }
+      }
+  }
+  // Get where the current cursor is
+  const position = vscode.window.activeTextEditor.selection.active;
+
+  // not totally sure about this --
+  // it has been hastily ported it from hadron editor so I still gotta learn how it works.
+  const range = ranges.find((range) => {
+      return range[0] <= position.c && position.c <= range[1]
+  });
+
+  const { text } = vscode.window.activeTextEditor.document.lineAt(range[1]);
+  const lastLineLength = text.length;
+
+  const selectionRange = new vscode.Range(
+      range[0],
+      0, // will need to calculate ... because what if the paren is not the first char on the line? does that matter?
+      range[1],
+      lastLineLength
+  );
+  const highlighted = editor.document.getText(selectionRange);
+
+
+  try {
+      const result = await lang.interpret(highlighted, null, true, true, true);
+      console.log(result);
+      postWindow.appendLine(result.trim());
+      flashHighlight(vscode.window.activeTextEditor, selectionRange);
+  }
+  catch (err) {
+      const errString = stringifyError(err);
+      postWindow.appendLine(errString);
+      console.error(errString);
+  }
+}
+
 module.exports = {
   initStatusBar,
   closeStatusBar,
   startSCLang,
   stopSCLang,
-  rebootSCLang,
   toggleSCLang,
-  bootSCSynth,
+  startSCSynth,
+  stopSCSynth,
+  toggleSCSynth,
   evaluate,
   hush,
 };
