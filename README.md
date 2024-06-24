@@ -10,20 +10,12 @@ ENVIL is a [Visual Studio Code](https://code.visualstudio.com/) extension which 
 
 This setup provides every convenient feature of vscode, overlaying it on top of your favorite browser.
 
-<div align="center">
-
 ## Requirements
-
-</div>
 
 - [SuperCollider](https://supercollider.github.io/downloads)
 - Any [Chromium based](https://en.wikipedia.org/wiki/Chromium_(web_browser)#Browsers_based_on_Chromium) Web Browser
 
-<div align="center">
-
 ## Getting started
-
-</div>
 
 ### ENVIL setup
 
@@ -51,11 +43,7 @@ This setup provides every convenient feature of vscode, overlaying it on top of 
 4. (*optional*) Configure the location of your sclang instance in your vscode *'settings.json'*:
    - example: `"envil.supercollider.sclang.cmd": "/Applications/SuperCollider.app/Contents/MacOS/sclang"`
 
-<div align="center">
-
 ## Features
-
-</div>
 
 ### ENVIL
 
