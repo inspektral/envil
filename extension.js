@@ -74,7 +74,6 @@ async function activate(context) {
                 await updateUserSettings(newWorkspaceSettings, false, vscode.ConfigurationTarget.Workspace);
             }
             // Update user settings
-            await delay(2000);
             const newGlobalSettingsPath = path.join(__dirname, 'data', 'global_settings.json');
             const newGlobalSettings = readJsonWithComments(newGlobalSettingsPath).json;
             await updateUserSettings(newGlobalSettings, false, vscode.ConfigurationTarget.Global);
@@ -82,7 +81,6 @@ async function activate(context) {
             const isExtensionActive = context.globalState.get('isExtensionActive') || false;
 
             if (!isExtensionActive) {
-                await delay(2000);
                 context.globalState.update('isExtensionActive', true);
                 console.log("Enabling APC Customize UI++");
                 await vscode.commands.executeCommand('apc.extension.enable');
@@ -111,7 +109,6 @@ async function activate(context) {
                 await updateUserSettings(newWorkspaceSettings, true, vscode.ConfigurationTarget.Workspace);
             }
             // Remove user settings
-            await delay(2000);
             const newGlobalSettingsPath = path.join(__dirname, 'data', 'global_settings.json');
             const newGlobalSettings = readJsonWithComments(newGlobalSettingsPath).json;
             await updateUserSettings(newGlobalSettings, true, vscode.ConfigurationTarget.Global);
@@ -278,8 +275,9 @@ function readJsonWithComments(filePath) {
 }
 
 async function updateUserSettings(updates, deleteSettings, configurationTarget) {
+    var config = vscode.workspace.getConfiguration();
     for (const [key, value] of Object.entries(updates)) {
-        vscode.workspace.getConfiguration().update(key, deleteSettings ? undefined : value, configurationTarget);
+        config.update(key, deleteSettings ? undefined : value, configurationTarget);
     }
 }
 
@@ -296,7 +294,7 @@ function checkLoadingCompletion() {
     return new Promise((resolve) => {
         const checkCondition = async () => {
             if (isLoadingCompleted) {
-                await delay(9000);
+                await delay(3500);
                 resolve();
             } else {
                 // Check again after a delay

@@ -3,7 +3,7 @@ const vscode = require('vscode');
 const { flashHighlight, stringifyError, getDefaultSCLangExecutable } = require('./util');
 const Lang = require('supercolliderjs').lang.default;
 
-const postWindow = vscode.window.createOutputChannel('scvsc postWindow');
+const postWindow = vscode.window.createOutputChannel('ENVIL - SC PostWindow');
 
 let lang = null;
 let server = null;
@@ -39,7 +39,7 @@ function closeStatusBar() {
 async function startSCLang() {
   const configuration = vscode.workspace.getConfiguration();
   const scLangPath = configuration.get('envil.supercollider.sclang.cmd');
-  const confFile = configuration.get('envilsupercollider.sclang.sclang_conf');
+  const confFile = configuration.get('envil.supercollider.sclang.sclang_conf');
 
   if (lang) {
     postWindow.appendLine('there is already an instance of sclang running');
