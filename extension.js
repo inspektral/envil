@@ -136,17 +136,18 @@ async function activate(context) {
             let text = document.getText(selection);
             text = text.length === 0 ? document.getText() : text;
             const lines = text.split('\n');
-            for (let line of lines) {
-                if (!line.includes('://') && line.includes('//')) {
+            for (const currentLine of lines) {
+                let line = currentLine;
+                if (line.trimStart().startsWith('//')) {
                     line = "";
                 }
                 // local files handling
                 if (line.includes('local/files/')) {
                     line = line.replace("local/files/", "http://localhost:3000/files/");
                 }
-                else if (line !== "") {
+                if (line !== "") {
                     command = command + line;
-                    if (line.endsWith(';')) {
+                    if (line.trimEnd().endsWith(";")) {
                         // send command to client
                         console.log("\n\n");
                         io.sockets.emit('new-command', { data: command });
