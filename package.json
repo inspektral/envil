@@ -2,7 +2,7 @@
   "name": "envil",
   "displayName": "ENVIL",
   "description": "A/V live-coding environment using Hydra and Supercollider",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/inspektral/envil"
