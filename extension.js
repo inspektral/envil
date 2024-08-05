@@ -8,6 +8,9 @@ const path = require('path');
 const fs = require('fs');
 const jsonc = require('jsonc-parser');
 const SC = require('./supercollider/lang');
+const { isEnvironmentActive, envilEnvironmentContextKey } = require('./supercollider/util');
+
+const osc = require("osc");
 
 let hyperScopes = null;
 
@@ -15,8 +18,7 @@ let app = null;
 let server = null;
 let io = null;
 let isLoadingCompleted = false;
-
-const envilEnvironmentContextKey = 'envil.environment.active';
+let oscPort = null;
 
 /**
  * @param {vscode.ExtensionContext} context
@@ -27,8 +29,8 @@ async function activate(context) {
 
     const workspaceFolder = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : null;
 
-    const isEnvironmentActive = vscode.workspace.getConfiguration().get(envilEnvironmentContextKey) || false;
-    if(isEnvironmentActive){
+    const isEnvActive = vscode.workspace.getConfiguration().get(envilEnvironmentContextKey) || false;
+    if(isEnvActive){
         showNotification('Loading ENVIL environment ...');
         startServersAndSockets(workspaceFolder);
         SC.initStatusBar();
@@ -122,9 +124,7 @@ async function activate(context) {
 
     const evaluateHydraCommand = vscode.commands.registerCommand('envil.hydra.evaluate', function () {
 
-        const isEnvironmentActive = vscode.workspace.getConfiguration().get(envilEnvironmentContextKey) || false;
-        if(!isEnvironmentActive){
-            vscode.window.showErrorMessage(`Load ENVIL environment before evaluating Hydra code`);
+        if(!isEnvironmentActive()){
             return;
         }
 
@@ -181,7 +181,6 @@ async function deactivate() {
         await updateUserSettings(newWorkspaceSettings, true, vscode.ConfigurationTarget.Workspace);
     }
     // Remove user settings
-    await delay(2000);
     const newGlobalSettingsPath = path.join(__dirname, 'data', 'global_settings.json');
     const newGlobalSettings = readJsonWithComments(newGlobalSettingsPath).json;
     await updateUserSettings(newGlobalSettings, true, vscode.ConfigurationTarget.Global);
@@ -208,11 +207,14 @@ function closeServersAndSockets() {
         });
         server = null;
     }
+    if (oscPort) {
+        oscPort.close();
+    }
 }
 
 function startServersAndSockets(workspaceFolder) {
     // shut down servers if needed
-    if (app || server || io) {
+    if (app || server || io || oscPort) {
         closeServersAndSockets();
     }
 
@@ -233,6 +235,17 @@ function startServersAndSockets(workspaceFolder) {
         socket.on('disconnect', () => {
             console.log('Socket.io: Client disconnected');
         });
+    });
+    oscPort = new osc.UDPPort({
+        localAddress: "localhost",
+        localPort: 3002
+    });
+    oscPort.open();
+    oscPort.on("message", (oscMsg) => {
+        console.debug("Received OSC message from Supercollider:", oscMsg);
+        if (io) {
+            io.sockets.emit('new-command', { data: oscMsg.args[0] });
+        }
     });
 
     // serve static files

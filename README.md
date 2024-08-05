@@ -47,17 +47,21 @@ This setup provides every convenient feature of vscode, overlaying it on top of 
 
 ### ENVIL
 
-- Opening the environment (vscode restart required)
+- Open the environment (vscode restart required)
   - Configures vscode to make it transparent
   - Opens your default browser to the local hydra server
   - Enables the use of the following Hydra/Supercollider features
-- Closing the environment (vscode restart required)
-  - Restores the previous vscode configuration
-- Updating the WORKSPACE *'settings.json'* to fine-tune your vscode UI adding/updating/removing your desired property
+- Close the environment (vscode restart required)
+  - Removes ENVIL vscode configuration
+- Update the WORKSPACE *'settings.json'* to fine-tune your vscode UI adding/updating/removing your desired property
+- Use vscode Snippets
+  - Create a '*snippets.code-snippets*' file inside the '.vscode' WORKSPACE folder
+  - Add any snippet you want want to use in your live-coding setup
+  - Type the snipper prefix and hit TAB in order to insert the snippet code
 
 ### HYDRA
 
-- Evaluating `hydra` code in a JS file:
+- Evaluate `hydra` code in a JS file
   - Use `;` to delimit every hydra command you want to sequentially evaluate
   - Use `local/files` as base path to serve any local file from a folder named **public** inside your *vscode workspace folder*
   - Use `//` to add comments in your code
@@ -79,15 +83,26 @@ This setup provides every convenient feature of vscode, overlaying it on top of 
 
 ### SUPERCOLLIDER
 
-- Handling `sclang` and `scsynth` startup/shutdown using:
-  - dedicated commands
-  - dedicated status bar toggles
-- Evaluating `supercollider` code in a SC/SCD file:
+- Handle `sclang` and `scsynth` startup/shutdown using
+  - Dedicated commands
+  - Dedicated status bar toggles
+- Evaluate `supercollider` code in a SC/SCD file
   1. Selected text
   2. Regions between parentheses `( )`
   3. Current line where the cursor is placed
-- Hushing the server
+- Hush the server
 - The interpreter evaluated lines are highlighted
+- Sync hydra from supercollider code sending OSC messages
+```javascript
+// Define an OSC sender
+~oscSend = NetAddr.new("localhost", 3002);
+// Define a function to send OSC messages
+~sendToHydra = { |command|
+    ~oscSend.sendMsg("/hydra", command);
+};
+// Example: send a command to Hydra
+~sendToHydra.value("osc(10, 0.1, 1).out()");
+```
 
 ## Troubleshooting
 

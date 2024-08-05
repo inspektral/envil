@@ -26,12 +26,15 @@
     "editor.rulers": [],
     "[supercollider]": {
         "editor.quickSuggestions": {
-            "other": "on",
+            "other": "off",
             "comments": "off",
             "strings": "off"
         },
-        "editor.suggest.showSnippets": true,
-        "editor.suggest.showWords": false
+        "editor.suggest.showSnippets": false,
+        "editor.suggest.showWords": false,
+        "editor.inlineSuggest.enabled": true,
+        "editor.tabCompletion": "onlySnippets",
+        "editor.suggest.snippetsPreventQuickSuggestions": false
     },
     "[javascript]": {
         "editor.quickSuggestions": {
@@ -41,7 +44,6 @@
         },
         "editor.hover.enabled": false,
         "editor.parameterHints.enabled": false,
-        "editor.inlineSuggest.enabled": false,
         "editor.lightbulb.enabled": "off",
         "editor.suggest.localityBonus": false,
         "editor.suggest.showWords": false,
@@ -69,6 +71,9 @@
         "editor.suggest.showCustomcolors": false,
         "editor.suggest.showFolders": false,
         "editor.suggest.showTypeParameters": false,
-        "editor.suggest.showSnippets": false
+        "editor.suggest.showSnippets": false,
+        "editor.inlineSuggest.enabled": true,
+        "editor.tabCompletion": "onlySnippets",
+        "editor.suggest.snippetsPreventQuickSuggestions": false
     }
 }

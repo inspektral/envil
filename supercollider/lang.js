@@ -1,6 +1,6 @@
 // @ts-nocheck
 const vscode = require('vscode');
-const { flashHighlight, stringifyError, getDefaultSCLangExecutable } = require('./util');
+const { flashHighlight, stringifyError, getDefaultSCLangExecutable, isEnvironmentActive } = require('./util');
 const Lang = require('supercolliderjs').lang.default;
 
 const postWindow = vscode.window.createOutputChannel('ENVIL - SC PostWindow');
@@ -37,6 +37,11 @@ function closeStatusBar() {
 }
 
 async function startSCLang() {
+
+  if(!isEnvironmentActive()){
+    return;
+  }
+  
   const configuration = vscode.workspace.getConfiguration();
   const scLangPath = configuration.get('envil.supercollider.sclang.cmd');
   const confFile = configuration.get('envil.supercollider.sclang.sclang_conf');
@@ -78,11 +83,16 @@ async function startSCLang() {
     lang = null;
     postWindow.appendLine('Error booting sclang');
     postWindow.appendLine(err);
-    console.log(err);
+    console.error(err);
   }
 }
 
 async function stopSCLang() {
+
+  if(!isEnvironmentActive()){
+    return;
+  }
+  
   await stopSCSynth();
   try {
     await lang.quit();
@@ -90,12 +100,13 @@ async function stopSCLang() {
     sclangStatusBar.text = SCLANG_STATUS_BAR_OFF;
   } catch (err) {
     postWindow.appendLine(err);
-    console.log(err);
+    console.error(err);
   }
   sclangStatusBar.show();
 }
 
 async function toggleSCLang() {
+
   if (lang === null) {
     startSCLang();
   } else {
@@ -104,6 +115,11 @@ async function toggleSCLang() {
 }
 
 async function startSCSynth() {
+
+  if(!isEnvironmentActive()){
+    return;
+  }
+    
   if(!lang) {
     postWindow.appendLine('sclang not started, cannot boot scsynth');
     return;
@@ -132,18 +148,24 @@ async function startSCSynth() {
 }
 
 async function stopSCSynth() {
+
+  if(!isEnvironmentActive()){
+    return;
+  }
+
   try {
     await lang.interpret('Server.killAll');
     server = null;
     scsynthStatusBar.text = SCSYNTH_STATUS_BAR_OFF;
   } catch (err) {
     postWindow.appendLine(err);
-    console.log(err);
+    console.error(err);
   }
   scsynthStatusBar.show();
 }
 
 async function toggleSCSynth() {
+
   if (server === null) {
     startSCSynth();
   } else {
@@ -152,8 +174,15 @@ async function toggleSCSynth() {
 }
 
 async function evaluate(hyperScopes) {
+
+  if(!isEnvironmentActive()){
+    return;
+  }
+
   if (!lang) {
-    console.error('sclang not started, cannot evaluate supercollider code');
+    const error = 'sclang not started, cannot evaluate supercollider code';
+    console.error(error);
+    postWindow.appendLine(error);
     return;
   }
 
@@ -168,8 +197,15 @@ async function evaluate(hyperScopes) {
 }
 
 async function hush() {
+
+  if(!isEnvironmentActive()){
+    return;
+  }
+
   if (!lang) {
-    postWindow.appendLine('sclang not started, cannot hush');
+    const error = 'sclang not started, cannot hush';
+    postWindow.appendLine(error);
+    console.error(error);
     return;
   }
   try {

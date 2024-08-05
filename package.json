@@ -2,7 +2,7 @@
   "name": "envil",
   "displayName": "ENVIL",
   "description": "A/V live-coding environment using Hydra and Supercollider",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/inspektral/envil"
@@ -144,12 +144,6 @@
         "mac": "cmd+.",
         "when": "editorTextFocus && config.envil.environment.active",
         "comment": "Safety-critical command to stop every sound played by Supercollider"
-      },
-      {
-        "command": "envil.supercollider.bootSCSynth",
-        "key": "ctrl+b",
-        "mac": "cmd+b",
-        "when": "editorTextFocus && editorLangId == 'supercollider' && config.envil.environment.active"
       }
     ],
     "languages": [
@@ -198,6 +192,7 @@
   "dependencies": {
     "express": "^4.18.2",
     "jsonc-parser": "^3.2.1",
+    "osc": "^2.4.4",
     "socket.io": "^4.7.4",
     "supercolliderjs": "^1.0.1"
   },

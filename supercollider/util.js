@@ -2,6 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const vscode = require('vscode');
 
+const envilEnvironmentContextKey = 'envil.environment.active';
+
 function getDefaultSCLangExecutable() {
   switch (process.platform) {
     case 'darwin':
@@ -51,8 +53,19 @@ function flashHighlight(editor, range, duration = 250) {
   }, duration);
 }
 
+function isEnvironmentActive() {
+  const isEnvActive = vscode.workspace.getConfiguration().get(envilEnvironmentContextKey) || false;
+  if(!isEnvActive){
+      vscode.window.showErrorMessage(`Load ENVIL environment to use its commands!`);
+      return false;
+  }
+  return true;
+}
+
 module.exports = {
   flashHighlight,
   stringifyError,
   getDefaultSCLangExecutable,
+  isEnvironmentActive,
+  envilEnvironmentContextKey
 };

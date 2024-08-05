@@ -1,6 +1,6 @@
 /* global Hydra */
 
-const canvas = document.getElementById("myCanvas");
+const canvas = document.getElementById("main-hydra-canvas");
 
 canvas.width = 1920;
 canvas.height = 1080;
