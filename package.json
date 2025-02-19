@@ -2,7 +2,7 @@
   "name": "envil",
   "displayName": "ENVIL",
   "description": "A/V live-coding environment using Hydra and Supercollider",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/inspektral/envil"
@@ -86,6 +86,10 @@
       {
         "command": "envil.supercollider.hush",
         "title": "Envil: Hush - Supercollider"
+      },
+      {
+        "command": "envil.supercollider.search",
+        "title": "Envil: Search - Supercollider"
       }
     ],
     "configuration": [
@@ -144,6 +148,13 @@
         "mac": "cmd+.",
         "when": "editorTextFocus && config.envil.environment.active",
         "comment": "Safety-critical command to stop every sound played by Supercollider"
+      },
+      {
+        "command": "envil.supercollider.search",
+        "key": "ctrl+h",
+        "mac": "cmd+h",
+        "when": "editorTextFocus && editorLangId == 'supercollider' && config.envil.environment.active",
+        "comment": "Search Supercollider code in the Supercollider documentation"
       }
     ],
     "languages": [
@@ -170,7 +181,7 @@
     ]
   },
   "extensionDependencies": [
-    "drcika.apc-extension",
+    "subframe7536.custom-ui-style",
     "draivin.hscopes"
   ],
   "scripts": {

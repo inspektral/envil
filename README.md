@@ -20,7 +20,7 @@ This setup provides every convenient feature of vscode, overlaying it on top of 
 ### ENVIL setup
 
 1. Install this vscode extension
-   - You may be prompted to install the HyperScope and APC Customie UI ++ vscode extensions, allow it.
+   - You may be prompted to install the HyperScope and Custom UI Style vscode extensions, allow it.
 2. Open the Command Palette (Mac: <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>, Windows: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>)
 3. Type `Envil: Open environment` to enable ENVIL commands (vscode restart required)
 4. Setup the environment:
@@ -56,7 +56,7 @@ This setup provides every convenient feature of vscode, overlaying it on top of 
 - Update the WORKSPACE *'settings.json'* to fine-tune your vscode UI adding/updating/removing your desired property
 - Use vscode Snippets
   - Create a '*snippets.code-snippets*' file inside the '.vscode' WORKSPACE folder
-  - Add any snippet you want want to use in your live-coding setup
+  - Add any snippet you want to use in your live-coding setup
   - Type the snipper prefix and hit TAB in order to insert the snippet code
 
 ### HYDRA
@@ -103,17 +103,18 @@ This setup provides every convenient feature of vscode, overlaying it on top of 
 // Example: send a command to Hydra
 ~sendToHydra.value("osc(10, 0.1, 1).out()");
 ```
+- See the Supercollider documentation inside vs code using the `Envil: Search - Supercollider` command
 
 ## Troubleshooting
 
 ### vscode doesn't become transparent
 
-1. Use the `Enable Apc extension` command to re-enable APC Customize UI++, especially useful after a vscode update
-2. Check the APC Customize UI++ properties inside the GLOBAL *'settings.json'* configuration file using the `Open User Settings (JSON)`:
-   - if the file has some unsaved changes save them (envil may conflict writing properties with the APC Customize UI++ extension) and try to close and re-open envil environment
+1. Use the `Custom UI Style: Reload` command to apply the Custom UI Style configuration, especially useful after a vscode update
+2. Check the  properties inside the GLOBAL *'settings.json'* configuration file using the `Open User Settings (JSON)`:
+   - if the file has some unsaved changes save them (envil may conflict writing properties with the Custom UI Style extension) and try to close and re-open envil environment
    - if you use vscode profiles make sure that your profile is configured so that it doesn't sync the settings
   ![vscode profile configuration example](resources/profiles-config.png)
-   - make sure the APC Customize UI++ extension properties are present inside the GLOBAL *'settings.json'* file and not inside a specific profile settings configuration file. The typical paths for the GLOBAL configuration file are:
+   - make sure that the extension properties are present inside the GLOBAL *'settings.json'* file and not inside a specific profile settings configuration file. The typical paths for the GLOBAL configuration file are:
      - WIN: *C:\Users\<Your Username>\AppData\Roaming\Code\User\settings.json*
      - MAC: */Users/\<Your Username>/Library/Application Support/Code/User/settings.json*
      - LINUX: */home/\<Your Username>/.config/Code/User/settings.json*
@@ -129,9 +130,9 @@ This setup provides every convenient feature of vscode, overlaying it on top of 
 1. Clone repository.
 2. Run `npm install` in repo root at the command line.
 3. Open `extension.js` in vscode and press `F5`. Select the option to run the "Extension Development Host."
-4. You may be prompted to install the HyperScope and APC Customie UI ++ vscode extensions, allow it.
+4. You may be prompted to install the HyperScope and Custom UI Style vscode extensions, allow it.
 
-This extension has been tested in Windows 10 Home only.
+This extension has been tested in Windows 10 only.
 
 ## Credits
 

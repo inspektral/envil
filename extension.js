@@ -59,7 +59,9 @@ async function activate(context) {
     const toggleSCSynth = vscode.commands.registerCommand('envil.supercollider.toggleSCSynth', SC.toggleSCSynth);
     const evaluate = vscode.commands.registerCommand('envil.supercollider.evaluate', () => SC.evaluate(hyperScopes));
     const hush = vscode.commands.registerCommand('envil.supercollider.hush', SC.hush);
-    context.subscriptions.push(startSCLang, stopSCLang, toggleSCLang, startSCSynth, stopSCSynth, toggleSCSynth, evaluate, hush);
+    const openSupercolliderSearch = vscode.commands.registerCommand('envil.supercollider.search', SC.openSupercolliderSearch);
+
+    context.subscriptions.push(startSCLang, stopSCLang, toggleSCLang, startSCSynth, stopSCSynth, toggleSCSynth, evaluate, hush, openSupercolliderSearch);
 
     const openEnvironmentCommand = vscode.commands.registerCommand('envil.start', async function () {
 		try {
@@ -84,9 +86,11 @@ async function activate(context) {
 
             if (!isExtensionActive) {
                 context.globalState.update('isExtensionActive', true);
-                console.log("Enabling APC Customize UI++");
-                await vscode.commands.executeCommand('apc.extension.enable');
-                console.log("APC Customize UI++ enabled successfully!");
+                console.log("Enabling Custom UI Style extension");
+                await vscode.commands.executeCommand('custom-ui-style.reload');
+                console.log("Custom UI Style enabled successfully!");
+                const config = vscode.workspace.getConfiguration();
+                config.update("custom-ui-style.reloadWithoutPrompting", true, vscode.ConfigurationTarget.Global);
             }
 
         } catch (error) {
@@ -187,9 +191,11 @@ async function deactivate() {
 
     await SC.stopSCLang();
 	
-    console.log("Disabling APC Customize UI++");
+    const config = vscode.workspace.getConfiguration();
+    config.update("custom-ui-style.reloadWithoutPrompting", undefined, vscode.ConfigurationTarget.Global);
+    console.log("Disabling Custom UI Style extension");
     await vscode.commands.executeCommand('apc.extension.disable');
-    console.log("APC Customize UI++ disabled successfully!");
+    console.log("Custom UI Style extension disabled successfully!");
     
     console.log('ENVIL Extension deactivated successfully!');
 }

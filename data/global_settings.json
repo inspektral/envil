@@ -9,10 +9,12 @@
     "editor.scrollbar.verticalScrollbarSize": 0,
     "window.zoomLevel": 0.75,
     "window.title": "${dirty}${activeEditorShort}${separator}ENVIL 💀",
-    "apc.stylesheet": {
+    "custom-ui-style.stylesheet": {
+        ".monaco-workbench": "background-color: #00000000 !important;",
+        ".monaco-inputbox": "background-color: #00000000 !important; color: #ffffff !important;",
         ".monaco-workbench .part.editor>.content .editor-group-container>.editor-container div.view-lines span": "display: inline-block; background-color: #00000056;"
     },
-    "apc.electron": {
+    "custom-ui-style.electron": {
         "transparent": true,
         "backgroundColor": "#00000000"
     }
