@@ -82,13 +82,10 @@ async function activate(context) {
             const newGlobalSettings = readJsonWithComments(newGlobalSettingsPath).json;
             await updateUserSettings(newGlobalSettings, false, vscode.ConfigurationTarget.Global);
 
-            const isExtensionActive = context.globalState.get('isExtensionActive') || false;
+            const HasEnvilExtensionAlreadyBeenActivated = context.globalState.get('HasEnvilExtensionAlreadyBeenActivated') || false;
 
-            if (!isExtensionActive) {
-                context.globalState.update('isExtensionActive', true);
-                console.log("Enabling Custom UI Style extension");
-                await vscode.commands.executeCommand('custom-ui-style.reload');
-                console.log("Custom UI Style enabled successfully!");
+            if (!HasEnvilExtensionAlreadyBeenActivated) {
+                context.globalState.update('HasEnvilExtensionAlreadyBeenActivated', true);
                 const config = vscode.workspace.getConfiguration();
                 config.update("custom-ui-style.reloadWithoutPrompting", true, vscode.ConfigurationTarget.Global);
             }
@@ -97,6 +94,7 @@ async function activate(context) {
             vscode.window.showErrorMessage(`Failed to load environment: ${error.message}`);
         } finally {
             isLoadingCompleted = true;
+            // await vscode.commands.executeCommand('custom-ui-style.reload');
         }
     });
 
@@ -123,6 +121,7 @@ async function activate(context) {
             vscode.window.showErrorMessage(`Failed to close the environment: ${error.message}`);
         } finally {
             isLoadingCompleted = true;
+            // await vscode.commands.executeCommand('custom-ui-style.reload');
         }
     });
 
@@ -194,8 +193,10 @@ async function deactivate() {
     const config = vscode.workspace.getConfiguration();
     config.update("custom-ui-style.reloadWithoutPrompting", undefined, vscode.ConfigurationTarget.Global);
     console.log("Disabling Custom UI Style extension");
-    await vscode.commands.executeCommand('apc.extension.disable');
+    await vscode.commands.executeCommand('custom-ui-style.rollback');
     console.log("Custom UI Style extension disabled successfully!");
+
+    context.globalState.update('HasEnvilExtensionAlreadyBeenActivated', false);
     
     console.log('ENVIL Extension deactivated successfully!');
 }

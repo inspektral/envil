@@ -125,6 +125,13 @@ This setup provides every convenient feature of vscode, overlaying it on top of 
 2. Check your GLOBAL *'settings.json'* configuration file using the `Open User Settings (JSON)` (see point 2 in the previous section)
 3. There may be some issues related to admin permissions. Check the [APC Customize UI++ extension troubleshooting page](https://github.com/drcika/apc-extension/blob/production/README.md#troubleshooting-extension-issues)
 
+
+### keyboard shortcuts doesn't work
+
+1. Open the keyboard shortcuts menu using the `Open Keyboard Shortcuts` command
+2. find the envil command which doesn't get triggered, right click it and select "Change When Expression"
+3. remove `config.envil.environment.active` from it
+
 ## Development Guide
 
 1. Clone repository.
